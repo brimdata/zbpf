@@ -249,6 +249,8 @@ class Tool(object):
             help="insert delimiter between kernel/user stacks")
         parser.add_argument("-f", "--folded", action="store_true",
             help="output folded format")
+        parser.add_argument("-z", "--zson", action="store_true",
+            help="output zson format")
         parser.add_argument("--debug", action="store_true",
             help="print BPF program before starting (for debugging purposes)")
         parser.add_argument("pattern",
@@ -307,7 +309,7 @@ class Tool(object):
     def run(self):
         self.probe.load()
         self.probe.attach()
-        if not self.args.folded:
+        if not (self.args.folded or self.args.zson):
             print("Tracing %d functions for \"%s\"... Hit Ctrl-C to end." %
                   (self.probe.matched, self.args.pattern))
         b = self.probe.bpf
@@ -339,7 +341,29 @@ class Tool(object):
                 kernel_stack = [] if k.kernel_stack_id < 0 else \
                     stack_traces.walk(k.kernel_stack_id)
 
-                if self.args.folded:
+                if self.args.zson:
+                    # print folded stack output
+                    user_stack = list(user_stack)
+                    kernel_stack = list(kernel_stack)
+                    us = ''
+                    sep = ''
+                    for addr in user_stack:
+                        us += '%s"%s"' % (sep,b.sym(addr,k.tgid))
+                        sep = ','
+                    ks = ''
+                    sep = ''
+                    for addr in kernel_stack:
+                        ks += '%s"%s"' % (sep,b.ksym(addr))
+                        sep = ','
+                    line = [k.name.decode()] + \
+                        [b.sym(addr, k.tgid) for addr in
+                        reversed(user_stack)] + \
+                        (self.need_delimiter and ["-"] or []) + \
+                        [b.ksym(addr) for addr in reversed(kernel_stack)]
+                    z = '{name:"%s",user:[%s],kernel:[%s],count:%d}(=stack)' % (
+                        k.name.decode(), us, ks, v.value)
+                    print(z)
+                elif self.args.folded:
                     # print folded stack output
                     user_stack = list(user_stack)
                     kernel_stack = list(kernel_stack)
@@ -361,17 +385,12 @@ class Tool(object):
                         self._print_comm(k.name, k.tgid)
                     print("    %d\n" % v.value)
             counts.clear()
+            sys.stdout.flush()
 
             if exiting:
-                if not self.args.folded:
+                if not (self.args.folded or self.args.zson):
                     print("Detaching...")
                 exit()
 
 if __name__ == "__main__":
-    try:
-        Tool().run()
-    except Exception:
-        if debug:
-            traceback.print_exc()
-        elif sys.exc_info()[0] is not SystemExit:
-            print(sys.exc_info()[1])
+    Tool().run()
