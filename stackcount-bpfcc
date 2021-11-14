@@ -360,7 +360,7 @@ class Tool(object):
                         reversed(user_stack)] + \
                         (self.need_delimiter and ["-"] or []) + \
                         [b.ksym(addr) for addr in reversed(kernel_stack)]
-                    z = '{name:"%s",user:[%s],kernel:[%s],count:%d}(=stack)' % (
+                    z = '{name:"%s",ustack:[%s],stack:[%s],count:%d}(=stack)' % (
                         k.name.decode(), us, ks, v.value)
                     print(z)
                 elif self.args.folded:
