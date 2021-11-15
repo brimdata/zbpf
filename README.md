@@ -108,6 +108,22 @@ If you want JSON output, just add `-f json`:
 % zapi query -f json '"__tcp_transmit_skb" in stack | count()'
 {"count":650}
 ```
+Here's another cool one.  This counts up stuff by the `name` field where
+the name could be in either a stack record or a process record...
+```
+zapi query "from bpf | count() by name"
+```
+and you get output like this
+```
+{name:"swapper/0",count:7(uint64)}
+{name:"python3",count:113(uint64)}
+{name:"sshd",count:73(uint64)}
+{name:"zed",count:392(uint64)}
+{name:"kworker/u4:3",count:2(uint64)}
+{name:"ksoftirqd/1",count:21(uint64)}
+{name:"ksoftirqd/0",count:1(uint64)}
+{name:"swapper/1",count:44(uint64)}
+```
 Here is a more sophisticated query where we sum up the counts from every
 1 second sampling intervel and we use the "stack" and the process "name"
 as group-by keys.  Note that the Zed query language is perfectly happy using
