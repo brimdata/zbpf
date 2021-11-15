@@ -188,7 +188,6 @@ that looks like this:
 Or you could get a sample of each shape by saying this:
 ```
 zapi query -Z 'val:=any(this) by typeof(this) | cut val'
-
 ```
 giving a result like this:
 ```
