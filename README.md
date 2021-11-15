@@ -66,8 +66,8 @@ zapi query -Z "sum(count) by stack,name | sort sum"
 
 ## The Brim App
 
-The Brim app is a nice way to look at Zed data.  It's a desktop app based on
-Electron, similar to Slack's model.
+The [Brim app](https://github.com/brimdata/brim) is a nice way to look at Zed data.
+Brim is a desktop app based on Electron, similar to the Slack desktop model.
 
 For my Mac/vagrant setup, I configured a port forwarding rule in the
 Vagrantfile that came with the `bpftracing` repo by adding the
