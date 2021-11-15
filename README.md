@@ -81,21 +81,20 @@ With your BPF trace data in a Zed lake, searching and analyzing your data
 is a piece of cake.  You can also slice and dice the data in the lake
 and export it in most any format you'd like (JSON, Parquet, CSV, or any Zed format).
 
-First make sure zapi query uses the "bpf" pool for your queries by running
+First, make sure zapi query uses the "bpf" pool for your queries by running
 ```
 zapi use bpf@main
 ```
-
 Here is a simple query that counts the number of times the
-identifier `__tcp_transmit_skb` appears in a stack trace (from `stackcount-bpfcc`)
+string "__tcp_transmit_skb" appears in a stack trace (from `stackcount-bpfcc`):
 ```
-zapi query '"__tcp_transmit_skb" in kernel | count()'
+zapi query '"__tcp_transmit_skb" in stack | count()'
 ```
 and you'll get a result that looks like this as the default format is ZSON:
 ```
 {count:650(uint64)}
 ```
-If you want JSON, just add `-f json`:
+If you want JSON output, just add `-f json`:
 ```
 % zapi query -f json '"__tcp_transmit_skb" in stack | count()'
 {"count":650}
@@ -108,7 +107,7 @@ any Zed value (including arrays) as a group-by key.
 zapi query -Z "from bpf | sum(count) by stack,name | sort -r sum | head 2"
 ```
 This will give the top two stack traces and will look something like this
-in the pretty-printed (-Z) ZSON output:
+in the pretty-printed (`-Z`) ZSON output:
 ```
 {
     stack: [
@@ -160,14 +159,14 @@ in the pretty-printed (-Z) ZSON output:
 
 Zed it a bit different and lets you put super-structured data all in one
 location.  It's kind of like rich database tables without having to define
-tables and schemas ahead of time.  That sounds like NoSQL stores like Mongo
-or CouchDB but Zed is quite different because it is super-structured
-instead of semi-structured.
-Super-structured data has a well-defined type for every value whereas semi-structured
+tables and schemas ahead of time.  While this may sound to you like a NoSQL store,
+e.g., Mongo or CouchDB, it's quite different because Zed data is super-structured
+instead of semi-structured:
+super-structured data has a well-defined type for every value whereas semi-structured
 data has implied types and the "shape" of a semi-structured data value can only be
 determined by traversing that value.
 
-The power of super-structured data types and Zed is that type are first class.
+The power of super-structured data types and Zed is that types are first class.
 This means you can put a type anywhere a value can go, and in particular,
 the Zed query language includes a `typeof()` operator that returns the type
 of a value as a value.  So you can say things like
