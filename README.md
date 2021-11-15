@@ -9,18 +9,17 @@ and stream updates live into a Zed lake.
 > its comprehensive type system so that external schemas do not need to be
 > defined and declared for richly typed data.
 
-
 > TBD: update Zed arch doc after branch is merged.
 
-## Setup
+## Setup on Mac
 
-To get going,
-I followed [the instructions here](https://codeboten.medium.com/bpf-experiments-on-macos-9ad0cf21ea83)
-for setting up a VirtualBox linux kernel on my Mac with BPF enabled.
+I set up tooling on my Mac with VirtualBox but a similar pattern should work on
+other systems or native linux instances.
 
-> This setup resulted in an older version of the BCC tools to be installed
-> that uses Python2.  If we take a more serious stab at this project, we'll
-> make it all work with the latest versions of BPF tooling.
+I adjusted a few thing in [the instructions here](https://codeboten.medium.com/bpf-experiments-on-macos-9ad0cf21ea83),
+mainly to use a newer version of Ubuntu Hirsute (21.04) (which should work on Windows WSL2)
+along with the more up-to-date BPF tooling referencing in
+[BCC issue #2678](https://github.com/iovisor/bcc/issues/2678#issuecomment-883203478).
 
 Since the latest tools in the `bcc` repo didn't run for me on this kernel,
 I just copied two tools from `/usr/sbin` to this repo:
