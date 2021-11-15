@@ -1,14 +1,16 @@
 # zbpf
 
 I took a stab at a quick and dirty prototype to see what it was like to
-emit BPF-collected data directly in the super-structured Zed format
+emit BPF-collected data directly in the
+[super-structured Zed format](https://github.com/brimdata/zed/blob/zed-update/docs/formats/zdm.md)
 and stream updates live into a Zed lake.
-
-> TBD: add link to pending Zed arch doc
 
 > Zed's super-structured approach allows data to be completely self describing using
 > its comprehensive type system so that external schemas do not need to be
 > defined and declared for richly typed data.
+
+
+> TBD: update Zed arch doc after branch is merged.
 
 ## Setup
 
@@ -46,7 +48,6 @@ On the same host, create a Zed data pool for BPF:
 ```
 zapi create bpf
 ```
-(note `loader.py` has pool "bpf" hardwired.)
 
 Then run any experiments you'd like with this tooling and various options,
 hitting ctrl-C to terminate, e.g.,
@@ -54,7 +55,10 @@ hitting ctrl-C to terminate, e.g.,
 sudo ./execsnoop-bpfcc | python3 loader.py
 sudo ./stackcount-bpfcc -i 1 -z ip_output | python3 loader.py
 ```
- Now, look at the data in the pool with `zapi query`:
+
+>Note the `loader.py` program has the pool "bpf" hardwired.
+
+ Now, you can look at the data in the pool with `zapi query`:
 ```
 zapi use -p bpf
 zapi query -Z "sum(count) by stack,name | sort sum"
