@@ -16,10 +16,16 @@ and stream updates live into a Zed lake.
 I set up tooling on my Mac with VirtualBox but a similar pattern should work on
 other systems or native linux instances.
 
-I adjusted a few thing in [the instructions here](https://codeboten.medium.com/bpf-experiments-on-macos-9ad0cf21ea83),
+I adjusted a few things from [the instructions here](https://codeboten.medium.com/bpf-experiments-on-macos-9ad0cf21ea83),
 mainly to use a newer version of Ubuntu Hirsute (21.04) (which should work on Windows WSL2)
 along with the more up-to-date BPF tooling referencing in
 [BCC issue #2678](https://github.com/iovisor/bcc/issues/2678#issuecomment-883203478).
+More details on the Ubuntu PPA are
+[here](https://chabik.com/2021/09/ppas-update/).
+With this approach, I was able to
+[fork the BCC repo](https://github.com/brimdata/bcc),
+run the latest BCC tooling in this newer Ubuntu, and
+make the modifications described here.
 
 Since the latest tools in the `bcc` repo didn't run for me on this kernel,
 I just copied two tools from `/usr/sbin` to this repo:
