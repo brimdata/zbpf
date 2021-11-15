@@ -21,8 +21,9 @@ from bcc import BPF
 import argparse
 import ctypes as ct
 import re
-import time
+import datetime
 from collections import defaultdict
+import sys
 
 # arguments
 examples = """examples:
@@ -130,11 +131,6 @@ int kretprobe__sys_execve(struct pt_regs *ctx)
 # initialize BPF
 b = BPF(text=bpf_text.replace("MAXARG", args.max_args))
 
-# header
-if args.timestamp:
-    print("%-8s" % ("TIME(s)"), end="")
-print("%-16s %-6s %-6s %3s %s" % ("PCOMM", "PID", "PPID", "RET", "ARGS"))
-
 TASK_COMM_LEN = 16      # linux/sched.h
 ARGSIZE = 128           # should match #define in C above
 
@@ -151,7 +147,6 @@ class EventType(object):
     EVENT_ARG = 0
     EVENT_RET = 1
 
-start_ts = time.time()
 argv = defaultdict(list)
 
 # TODO: This is best-effort PPID matching. Short-lived processes may exit
@@ -185,12 +180,15 @@ def print_event(cpu, data, size):
             skip = True
 
         if not skip:
-            if args.timestamp:
-                print("%-8.3f" % (time.time() - start_ts), end="")
             ppid = get_ppid(event.pid)
-            print("%-16s %-6s %-6s %3s %s" % (event.comm.decode(), event.pid,
+            
+            z = '{ts:%s,pcomm:"%s",pid:%s,ppid:%s,ret:%s,args:"%s"}(=exec)' % (datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    event.comm.decode(), event.pid,
                     ppid if ppid > 0 else "?", event.retval,
-                    b' '.join(argv[event.pid]).decode()))
+                    b' '.join(argv[event.pid]).decode())
+
+            print(z)
+            sys.stdout.flush()
         try:
             del(argv[event.pid])
         except Exception:
