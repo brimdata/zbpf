@@ -83,7 +83,7 @@ Vagrant.configure("2") do |config|
 ```
 Then, in the Brim app, I added a lake connection to `localhost:8098`.
 
-## Sample Output
+## Examples
 
 With your BPF trace data in a Zed lake, searching and analyzing your data
 is a piece of cake.  You can also slice and dice the data in the lake
@@ -182,7 +182,9 @@ in the pretty-printed (`-Z`) ZSON output:
 }
 ```
 
-Zed it a bit different and lets you put super-structured data all in one
+### Zed and Data Shapes
+
+Zed is a bit different and lets you put super-structured data all in one
 location.  It's kind of like rich database tables without having to define
 tables and schemas ahead of time.  While this may sound to you like a NoSQL store,
 e.g., Mongo or CouchDB, it's quite different because Zed data is super-structured
@@ -263,3 +265,21 @@ giving a result like this:
     } (=stack)
 }
 ```
+
+## Zed for Telemetry
+
+We think Zed could be a really great way to store and query telemetry data
+as it unifies events and metrics.  It's not just a single format but
+[a family of formats](https://github.com/brimdata/zed/tree/main/docs/formats)
+that all adhere to exactly the same data model.  ZNG is the efficient row-based format
+and ZST is the columnar format.
+
+> The ZST implementation is still a bit early...
+
+[The Zed lake](https://github.com/brimdata/zed/tree/main/docs/lake)
+is designed to ingest row-based ZNG then run indexing, compaction, and columnar-conversion as data objects stabilize (there's a nice API for querying objects and their metadata --- of course using ZNG --- so these indexing workflows can be driven by external agents and different agents can be developed for different use cases).
+
+Unlike search systems, all the queries work whether indexed or not
+and indexes simply speed things up.  And if you change indexing rules,
+you don't need to reindex everything.  Just the stuff you want
+the new rules to apply to.
