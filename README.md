@@ -60,9 +60,13 @@ sudo ./stackcount-bpfcc -i 1 -z ip_output | python3 loader.py
 
  Now, you can look at the data in the pool with `zapi query`:
 ```
-zapi use -p bpf
+zapi use bpf@main
 zapi query -Z "sum(count) by stack,name | sort sum"
 ```
+
+> Note that Zed lakes have branching and merging just like `git`.  We are going
+> to simplify the commitish so you can say `bpf` instead of `bpf@main` where the
+> commitish will default to the `main` branch.
 
 ## The Brim App
 
@@ -85,7 +89,8 @@ With your BPF trace data in a Zed lake, searching and analyzing your data
 is a piece of cake.  You can also slice and dice the data in the lake
 and export it in most any format you'd like (JSON, Parquet, CSV, or any Zed format).
 
-First, make sure zapi query uses the "bpf" pool for your queries by running
+First, make sure zapi query uses the "bpf" pool for your queries, as above,
+by running
 ```
 zapi use bpf@main
 ```
