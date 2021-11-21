@@ -290,6 +290,92 @@ giving a result like this:
 }
 ```
 
+This query computes the unique set of stacks grouped by the parent caller
+of the traced function (in this case `ip_output`):
+```
+zapi query -Z "from bpf | stacks:=union(stack) by callee:=stack[1] | len(stacks)==2"
+```
+where we filtered by the length of the stacks to get just this one record
+(for this particular data set), giving
+```
+{
+    callee: "tcp_v4_send_synack",
+    stacks: |[
+        [
+            "ip_output",
+            "tcp_v4_send_synack",
+            "tcp_conn_request",
+            "tcp_v4_conn_request",
+            "tcp_v6_conn_request",
+            "tcp_rcv_state_process",
+            "tcp_v4_do_rcv",
+            "tcp_v4_rcv",
+            "ip_protocol_deliver_rcu",
+            "ip_local_deliver_finish",
+            "ip_local_deliver",
+            "ip_sublist_rcv_finish",
+            "ip_list_rcv_finish.constprop.0",
+            "ip_sublist_rcv",
+            "ip_list_rcv",
+            "__netif_receive_skb_list_core",
+            "__netif_receive_skb_list",
+            "netif_receive_skb_list_internal",
+            "napi_complete_done",
+            "e1000_clean",
+            "napi_poll",
+            "net_rx_action",
+            "__softirqentry_text_start",
+            "asm_call_sysvec_on_stack",
+            "do_softirq_own_stack",
+            "irq_exit_rcu",
+            "common_interrupt",
+            "asm_common_interrupt"
+        ],
+        [
+            "ip_output",
+            "tcp_v4_send_synack",
+            "tcp_conn_request",
+            "tcp_v4_conn_request",
+            "tcp_v6_conn_request",
+            "tcp_rcv_state_process",
+            "tcp_v4_do_rcv",
+            "tcp_v4_rcv",
+            "ip_protocol_deliver_rcu",
+            "ip_local_deliver_finish",
+            "ip_local_deliver",
+            "ip_rcv_finish",
+            "ip_rcv",
+            "__netif_receive_skb_one_core",
+            "__netif_receive_skb",
+            "process_backlog",
+            "napi_poll",
+            "net_rx_action",
+            "__softirqentry_text_start",
+            "asm_call_sysvec_on_stack",
+            "do_softirq_own_stack",
+            "do_softirq",
+            "__local_bh_enable_ip",
+            "ip_finish_output2",
+            "__ip_finish_output",
+            "ip_finish_output",
+            "ip_output",
+            "__ip_queue_xmit",
+            "ip_queue_xmit",
+            "__tcp_transmit_skb",
+            "tcp_connect",
+            "tcp_v4_connect",
+            "__inet_stream_connect",
+            "inet_stream_connect",
+            "__sys_connect_file",
+            "__sys_connect",
+            "__x64_sys_connect",
+            "do_syscall_64",
+            "entry_SYSCALL_64_after_hwframe"
+        ]
+    ]|
+}
+```
+
 ## Zed for Telemetry
 
 We think Zed could be a really great way to store and query telemetry data
