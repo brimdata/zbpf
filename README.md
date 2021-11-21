@@ -1,6 +1,6 @@
 # zbpf
 
-This repo contains a very rough proof-of-concept for integrating
+This repo describes a very rough proof-of-concept for integrating
 [Zed](https://github.com/brimdata/zed)
 into
 [BPF](https://ebpf.io/).
@@ -13,8 +13,6 @@ and stream updates live into a
 > Zed's super-structured approach allows data to be completely self describing using
 > its comprehensive type system so that external schemas do not need to be
 > defined and declared for richly typed data.
-
-> TBD: update Zed arch doc after branch is merged.
 
 Note that we are using the term "BPF" to refer to the modern eBPF linux
 subsystem as the
@@ -422,10 +420,9 @@ giving a result like this:
 This query computes the unique set of stacks grouped by the parent caller
 of the traced function (in this case `ip_output`):
 ```
-zapi query -Z "stacks:=union(stack) by callee:=stack[1] | len(stacks)==2"
+zapi query -Z "stacks:=union(stack) by callee:=stack[1]"
 ```
-where we filtered by the length of the stacks to get just this one record
-(for this particular data set), giving
+giving output like this
 ```
 {
     callee: "tcp_v4_send_synack",
@@ -503,6 +500,7 @@ where we filtered by the length of the stacks to get just this one record
         ]
     ]|
 }
+...
 ```
 
 ## Zed for Telemetry
@@ -525,50 +523,23 @@ the new rules to apply to.
 
 ## Appendix: MacBook Setup
 
-I set up tooling on my Mac with VirtualBox but a similar pattern should work on
-other systems or native linux instances.
+I ran the experiments above using a linux host configured on VirtualBox
+using vagrant running on on a MacBook.
 
 I adjusted a few things from [the instructions here](https://codeboten.medium.com/bpf-experiments-on-macos-9ad0cf21ea83),
 mainly to use a newer version of Ubuntu Hirsute (21.04)
 along with the more up-to-date BPF tooling referencing in
 [BCC issue #2678](https://github.com/iovisor/bcc/issues/2678#issuecomment-883203478).
-More details on the Ubuntu PPA are
-[here](https://chabik.com/2021/09/ppas-update/).
 
-
-> With this approach, I was able to
-> [fork the BCC repo](https://github.com/brimdata/bcc),
-> run the latest BCC tooling in this newer Ubuntu, and
-> make the modifications described here.
-
-Since the latest tools in the `bcc` repo didn't run for me on this kernel,
-I just copied two tools from `/usr/sbin` to this repo:
-`stackcount-bpfcc` and `execsnoop-bpfcc`.
-I hacked each of these tools to output events as ZSON lines of text
-instead of text sent to st.
-
-Also, since the Zed Python client assumes Python3, I created a
-separate "loader" script to bundle lines of ZSON with a timeout
-and commit each bundle to a Zed server on running on `localhost`
-instead of bundling this logic in the bcc tooling.
-
-Install `zed` on your linux host by following
-the instructions in the
-[Zed repository Releases section](https://github.com/brimdata/zed/releases).
-You need version `v0.33` or later.
-
-Finally, clone our fork of the [bcc repo]() into your linux host so you can
-run Zed-emabled BCC tooling...
+I used the [PPA here](https://chabik.com/2021/09/ppas-update/),
+but for these experiments, installed only bpfcc:
 ```
-git clone https://github.com/brimdata/bcc
+sudo add-apt-repository ppa:hadret/bpftrace
+sudo add-apt update
+sudo add-apt install bpfcc
 ```
 
-For the Mac/vagrant setup described below, a port forwarding rule is defined
-in [the Vagrantfile](./Vagrantfile) that forwards the host port 8098 to
-the guest port 9867, which is the default port for the Zed lake.
-
-that came with the `bpftracing` repo by adding the
-"forwarded_port" rule below:
+Also, I added a port forwarding rule in the (Vagrantfile)[./Vagrantfile]:
 ```
 Vagrant.configure("2") do |config|
   ...
