@@ -1,6 +1,6 @@
 # zbpf
 
-This repo contains a very lightweight, proof-of-concept for integrating
+This repo contains a very rough proof-of-concept for integrating
 [Zed](https://github.com/brimdata/zed)
 into
 [BPF](https://ebpf.io/).
