@@ -16,9 +16,10 @@ and stream updates live into a Zed lake.
 > TBD: update Zed arch doc after branch is merged.
 
 Note that we are using the term "BPF" to refer to the modern eBPF linux
-subsystem as the original BPF is now referred to as
-[classic BPF](https://www.usenix.org/conference/usenix-winter-1993-conference/bsd-packet-filter-new-architecture-user-level-packet)
-[explained by Brendan Gregg in his LISA21 talk](https://youtu.be/_5Z2AU7QTH4?t=82).
+subsystem as the
+[original BPF](https://www.usenix.org/conference/usenix-winter-1993-conference/bsd-packet-filter-new-architecture-user-level-packet)
+is now called "classic BPF"
+[as explained by Brendan Gregg in his LISA21 talk](https://youtu.be/_5Z2AU7QTH4?t=82).
 
 The examples described here are directly embedded in the Python tooling from the
 [BPF Compiler Collection (BCC)](https://github.com/iovisor/bcc), but the
@@ -31,7 +32,8 @@ or to any custom BPF application.
 Dealing with data is hard.  To keep things simple, people ofteh simplify
 their rich data with "go to" and ubiquitous formats like CSV and JSON.
 While simple in appearance,
-these formats can be frustrating in practice.
+these formats can be
+[frustrating in practice](https://www.bitsondisk.com/writing/2021/retire-the-csv/).
 
 We were recently interacting with a colleague at a research university who
 was instrumenting database performance using BPF.  The team there wrote
