@@ -20,29 +20,76 @@ or to any custom BPF application.
 
 ## Motivation
 
-at the site where data is generated you have richly typed data structures.
-Then you turns these data structures into textual logs or maybe CSV or JSON
-losing the detailed type information that was there.
+Dealing with data is hard.  To keep things simple, people ofteh simplify
+their rich data with "go to" and ubiquitous formats like CSV and JSON.
+While simple in appearance,
+these formats can be frustrating in practice.
 
-a colleague participating on a university research team was
-collecting custom performance measurements of databases using BPF.
+We were recently interacting with a colleague at a research university who
+was instrumenting database performance using BPF.  The team there wrote
+a bunch of custom BCC apps, which generated huge numbers of large CSV files.
+They would then analyze this bulky data with custom Python/Pandas code,
+and along with running SQL analytics on an RDBMS.
 
-Schema challenges... put the CSVs into a warehouse.  But now whenever
-the experimental structure changes, the database tables need to be updated
-and old data potentially migrated to new tables.
-keep
+Our colleague was pulling his hair out: running out of disk space,
+dealing with thousands of CSV files in his local file system conforming
+to many different and changing column layouts, and
+updating tables in the SQL database to track changes in their
+collection methodology.  It was a nightmare.
 
-This was precisely the motivation of Zed: XXX.
+Then our friend remembered Zed and asked "isn't this where Zed is supposed to help?"
+And we said "Yes, of course!"
 
-XXX story about CSV and BPF measurements
+The obvious approach here is to simply load all the CSV files into a Zed lake
+(e.g., running on S3 to overcome storage limits),
+then run SQL and/or Zed queries on the Zed lake.  Yet we wondered if there
+could be some benefit in a deeper integration with BPF.
+
+One of the difficulties in data
+management is that the source of data often has rich and detailed information
+about the types and structure of this origin data, only to throw that information
+away when serializing into formats like CSV or JSON.  Indeed in BPF, the BCC tooling
+has direct access to in-kernel C data structures with all of their type information
+and potentially hierarchical structure.  The BCC Python code, for instance,
+accesses native BPF events via the
+[ctypes](https://docs.python.org/3/library/ctypes.html) library.
+
+Yet our colleagues BCC tooling simply threw away this detailed type information
+and instead wrote custom code to output trace data as CSV records in
+a fixed set of hard-coded columns.
+
+What if you could simply marshal any `ctypes` struct into a Zed record
+and efficiently serialize this record as ZNG?  Then BPF code that captured
+native C events could simply marshal the data directly and send it along to a Zed lake.
+Because Zed doesn't require schema definitions nor does it organize data
+into tables, all these native C events could be intermingled and efficiently
+transmitted into a Zed lake with minimal effort.
+
+Moreover, if we mapped the type name of the C struct to a Zed type, then we
+could use Zed type queries to pull out all of the records of a given type.
+So, it's sort of like having tables without ever having to create them.
+
+To explore this idea of efficient serialization of BPF events as ZNG,
+we first developed the simple proof-of-concept here.  We don't have a
+ctypes marshaler working yet nor do we have Zed output serialiead as ZNG.
+Rather we instrumented a couple of BCC tools (namely, `execsnoop` and `stackcount`)
+with flags to generate the human-readable ZSON format and load this data
+directly into a Zed lake.
+
+> ZSON much less efficient than ZNG, but we just wanted to try something simple
+> here to see what people think and whether further work is warranted.
 
 ## Setup
 
-You will need a linux environment with BPF enabled (the "linux host")
-and any client environment (the "desktop host").  The desktop host will query the
-Zed lake running on the linux host.  If you happen to be running
-a BPF-enabled desktop or laptop, then the linux host and desktop host
-could be the same.
+To explore this proof-of-concept,
+you will need a linux environment with BPF enabled (the "linux host")
+and a client environment (the "desktop host") to query the BPF data.
+The desktop host will query a
+Zed lake running on the linux host.
+
+> If you happen to be running
+> a BPF-enabled desktop or laptop, then the linux host and desktop host
+> could be one in the same.
 
 ### The linux host
 
