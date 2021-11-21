@@ -175,7 +175,7 @@ where _linux-host_ is the IP or DNS name of the linux host.
 If no port is supplied in the lake URL, then 9867 is assumed.
 
 For the Vagrant setup described
-[described below](#appendix:-macbook-setup), the desktop port 8098 is
+[described below](#appendix-macbook-setup), the desktop port 8098 is
 forwarded to the linux port 9876, so you should use this for ZED_LAKE:
 ```
 export ZED_LAKE=http://localhost:8098
@@ -196,25 +196,35 @@ should be one of the two options [described above](#zapi-on-the-desktop-host):
 
 ## Running Experiments
 
-Then `cd` into the forked bcc repo and
-run any experiments you'd like with this tooling and various options,
-hitting ctrl-C to terminate, e.g.,
+To run an BPF/Zed capture experiment on the linux host,
+`cd` into the top-level directory fo the forked bcc repo
+(remember you need to be on the `zed` git branch).
+
+Then, run an experiment, specify the `-z` flag for Zed,
+and try either _execsnoop_:
 ```
 sudo python3 ./tools/execsnoop.py -z
-XXX sudo ./stackcount-bpfcc -i 1 -z ip_output | python3 loader.py
 ```
-
->Note the `loader.py` program has the pool "bpf" hardwired.
-
- Now, you can look at the data in the pool with `zapi query`:
+Or _stackcount_:
 ```
-zapi use bpf@main
-zapi query -Z "sum(count) by stack,name | sort sum"
+sudo python3 ./tools/stackcount.py -i 1 -P -z ip_output
 ```
+Here, we have chosen "ip_output" as the kernel function to trace,
+but you can try any BPF-traceable function.  We also specified
+`-i 1` so that data is transmitted to the Zed lake every second,
+and `-P` so we get per-process stats (in particular, the process name
+for each stack is present).
 
-> Note that Zed lakes have branching and merging just like `git`.  We are going
-> to simplify the commitish so you can say `bpf` instead of `bpf@main` where the
-> commitish will default to the `main` branch.
+In either case, you can hit ctrl-C to terminate.
+
+>Note that these two programs have the pool "bpf" hardwired.
+
+ Now, you can look at the data in the pool with `zapi query`
+ run either on the linux host or the desktop host
+ (configured as described above):
+```
+zapi query -use bpf@main -Z "sum(count) by stack,name | sort sum"
+```
 
 ## Examples
 
@@ -228,7 +238,7 @@ by running
 zapi use bpf@main
 ```
 Here is a simple query that counts the number of times the
-string "__tcp_transmit_skb" appears in a stack trace (from `stackcount-bpfcc`):
+string "__tcp_transmit_skb" appears in a stack trace (from `stackcount`):
 ```
 zapi query '"__tcp_transmit_skb" in stack | count()'
 ```
@@ -238,7 +248,7 @@ and you'll get a result that looks like this as the default format is ZSON:
 ```
 If you want JSON output, just add `-f json`:
 ```
-% zapi query -f json '"__tcp_transmit_skb" in stack | count()'
+zapi query -f json '"__tcp_transmit_skb" in stack | count()'
 {"count":650}
 ```
 Here's another cool one.  This counts up stuff by the `name` field where
