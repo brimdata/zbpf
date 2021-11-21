@@ -40,7 +40,7 @@ We were recently interacting with a colleague at a research university who
 was instrumenting database performance using BPF.  The team there wrote
 a bunch of custom BCC apps, which generated huge numbers of large CSV files.
 They would then analyze this bulky data with custom Python/Pandas code,
-and along with running SQL analytics on an RDBMS.
+along with running SQL analytics on an RDBMS.
 
 Our colleague was pulling his hair out: running out of disk space,
 dealing with thousands of CSV files in his local file system conforming
@@ -49,9 +49,9 @@ updating tables in the SQL database to track changes in their
 collection methodology.  It was a nightmare.
 
 Then our friend remembered Zed and asked "isn't this where Zed is supposed to help?"
-And we said "Yes, of course!"
+Yes, of course!
 
-The obvious approach here is to simply load all the CSV files into a Zed lake
+The obvious approach here would be to simply load all the CSV files into a Zed lake
 (e.g., running on S3 to overcome storage limits),
 then run SQL and/or Zed queries on the Zed lake.  Yet we wondered if there
 could be some benefit in a deeper integration with BPF.
@@ -65,9 +65,11 @@ and potentially hierarchical structure.  The BCC Python code, for instance,
 accesses native BPF events via the
 [ctypes](https://docs.python.org/3/library/ctypes.html) library.
 
-Yet our colleagues BCC tooling simply threw away this detailed type information
-and instead wrote custom code to output trace data as CSV records in
+Yet our colleague's BCC tooling simply threw away this detailed type information
+and instead wrote its output as CSV records in
 a fixed set of hard-coded columns.
+
+There must be a better way.
 
 What if you could simply marshal any `ctypes` struct into a Zed record
 and efficiently serialize this record as ZNG?  Then BPF code that captured
@@ -226,6 +228,14 @@ In either case, you can hit ctrl-C to terminate.
 zapi query -use bpf@main -Z "sum(count) by stack,name | sort sum"
 ```
 
+Note that `execsnoop` labels uses the Zed type name "exec" for its records
+and `stackcount` likewise uses the name "stack".  Thus, you can query by type
+to get the records that came from each different command:
+```
+zapi query -use bpf@main -Z "is(type(exec))"
+zapi query -use bpf@main -Z "is(type(stack))"
+```
+
 ## Examples
 
 With your BPF trace data in a Zed lake, searching and analyzing your data
@@ -254,7 +264,7 @@ zapi query -f json '"__tcp_transmit_skb" in stack | count()'
 Here's another cool one.  This counts up stuff by the `name` field where
 the name could be in either a stack record or a process record...
 ```
-zapi query "from bpf | count() by name"
+zapi query "count() by name"
 ```
 and you get output like this
 ```
@@ -268,11 +278,11 @@ and you get output like this
 {name:"swapper/1",count:44(uint64)}
 ```
 Here is a more sophisticated query where we sum up the counts from every
-1 second sampling intervel and we use the "stack" and the process "name"
+1 second sampling interval and we use the "stack" and the process "name"
 as group-by keys.  Note that the Zed query language is perfectly happy using
 any Zed value (including arrays) as a group-by key.
 ```
-zapi query -Z "from bpf | sum(count) by stack,name | sort -r sum | head 2"
+zapi query -Z "sum(count) by stack,name | sort -r sum | head 2"
 ```
 This will give the top two stack traces and will look something like this
 in the pretty-printed (`-Z`) ZSON output:
@@ -412,7 +422,7 @@ giving a result like this:
 This query computes the unique set of stacks grouped by the parent caller
 of the traced function (in this case `ip_output`):
 ```
-zapi query -Z "from bpf | stacks:=union(stack) by callee:=stack[1] | len(stacks)==2"
+zapi query -Z "stacks:=union(stack) by callee:=stack[1] | len(stacks)==2"
 ```
 where we filtered by the length of the stacks to get just this one record
 (for this particular data set), giving
