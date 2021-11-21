@@ -18,27 +18,42 @@ approach would be also applicable to
 [bpftrace](https://github.com/iovisor/bpftrace)
 or to any custom BPF application.
 
+## Motivation
+
+XXX story about CSV and BPF measurements
+
 ## Setup
 
-Setup a linux test environment as follows:
+You will need a linux environment with BPF enabled (the "linux host")
+and a client host (the "desktop host") that you will use to query a
+Zed lake running on the linux host.  If you happen to be running
+a BPF-enabled desktop or laptop, then the linux host and desktop host
+could be the same.
 
-* Provision a linux host with a recent kernel and recent version of
+### The linux host
+
+Provision a linux host with a recent kernel and recent version of
 BPF enabled.
 [See below](#appendix:-macbook-setup)
-for some hints for running a recent linux using Vagrant on a MacBook.
-* Install `zed` (`v0.33` or later) on your linux host.
+for some hints for running a recent linux using Vagrant on a MacBook
+but any recent linux running anywhere should work.
+
+Install `zed` (`v0.33` or later) on your linux host.
 Follow the instructions in the repository's
 [Github Releases](https://github.com/brimdata/zed/releases).
-* Install the latest `zed` Python module on your linux host:
+
+Install the latest `zed` Python module on your linux host:
 ```
 pip3 install "git+https://github.com/brimdata/zed#subdirectory=python/zed"
 ```
-* Clone the Zed-modified BCC tooling.  We forked the BCC repository
+
+Clone the Zed-modified BCC tooling.  We forked the BCC repository
 and made the modifications on a branch therein called `zed`:
 ```
 git clone https://github.com/brimdata/bcc.git
 git checkout zed
 ```
+
 A Zed lake service must run during the
 course of experiments described below.
 In a terminal on your linux host, create this service as follows:
@@ -58,23 +73,31 @@ The `zapi ls` command should display the pool called `bpf`.
 > to a Zed lake running at scale elsewhere.  For this experiment,
 > we are simply running the Zed lake directly on the linux host.
 
-Next, decide where you want to query your BPF data from (the "desktop host")
-and install zed and/or the
-[Brim app](https://github.com/brimdata/brim) there.
-The desktop host will send queries to the lake running on the linux host.
+### The desktop host
 
-### `zapi` on the desktop host
+To query the Zed lake running on the linux host, you should install
+zed and or Brim on your desktop/laptop.
+
+Install these packages following the instructions in
+[Zed releases](https://github.com/brimdata/zed/releases)
+(as described above for the linux host)
+[Brim releases](https://github.com/brimdata/brime/releases).
+
+You can also [build Zed from source](https://github.com/brimdata/zed#building-from-source).
+
+#### `zapi`
 
 By default, `zapi` connects to the lake service API at `http://localhost:9867`,
 which is also the default port used by `zed lake serve`.
 Thus, you can run `zapi` commands on the linux host without any configuration.
 
-To point `zapi` running on the desktop host at the linux lake,
+On the desktop host, to point `zapi` at the lake running on linux host,
 you can use the `-lake` command-line option or simply set
 the `ZED_LAKE` environment, e.g.,
 ```
 export ZED_LAKE=http://linux-host
 ```
+where _linux-host_ is the IP or DNS name of the linux host.
 If no port is supplied in the lake URL, then 9867 is assumed.
 
 For the Vagrant setup described
@@ -84,7 +107,7 @@ forwarded to the linux port 9876, so you should use this for ZED_LAKE:
 export ZED_LAKE=http://localhost:8098
 ```
 
-### Brim on the desktop host
+#### Brim
 
 The Brim app is a desktop application based on Electron, similar to the Slack
 desktop model.  Brim is a nice way to look at Zed data.
