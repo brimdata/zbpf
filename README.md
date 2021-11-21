@@ -1,7 +1,8 @@
 # zbpf
 
-I took a stab at a quick and dirty prototype to see what it was like to
-emit BPF-collected data directly in the
+This repo contains a very lightweight, proof-of-concept for integrating
+Zed into BPF.  The idea is to arrange for BPF to emit events and aggregates
+directly in the
 [super-structured Zed format](https://github.com/brimdata/zed/blob/zed-update/docs/formats/zdm.md)
 and stream updates live into a Zed lake.
 
@@ -11,66 +12,92 @@ and stream updates live into a Zed lake.
 
 > TBD: update Zed arch doc after branch is merged.
 
-XXX put service on host side to emulate the proper model of sending telemetry
-to the service.
+The examples here are directly embedded in the Python tooling from the
+[BPF Compiler Collection (BCC)](https://github.com/iovisor/bcc), but the
+approach would be also applicable to
+[bpftrace](https://github.com/iovisor/bpftrace)
+or to any custom BPF application.
 
-## Setup on Mac
+## Setup
 
-I set up tooling on my Mac with VirtualBox but a similar pattern should work on
-other systems or native linux instances.
+Setup a linux test environment as follows:
 
-I adjusted a few things from [the instructions here](https://codeboten.medium.com/bpf-experiments-on-macos-9ad0cf21ea83),
-mainly to use a newer version of Ubuntu Hirsute (21.04)
-along with the more up-to-date BPF tooling referencing in
-[BCC issue #2678](https://github.com/iovisor/bcc/issues/2678#issuecomment-883203478).
-More details on the Ubuntu PPA are
-[here](https://chabik.com/2021/09/ppas-update/).
-
-
-> With this approach, I was able to
-> [fork the BCC repo](https://github.com/brimdata/bcc),
-> run the latest BCC tooling in this newer Ubuntu, and
-> make the modifications described here.
-
-Since the latest tools in the `bcc` repo didn't run for me on this kernel,
-I just copied two tools from `/usr/sbin` to this repo:
-`stackcount-bpfcc` and `execsnoop-bpfcc`.
-I hacked each of these tools to output events as ZSON lines of text
-instead of text sent to st.
-
-Also, since the Zed Python client assumes Python3, I created a
-separate "loader" script to bundle lines of ZSON with a timeout
-and commit each bundle to a Zed server on running on `localhost`
-instead of bundling this logic in the bcc tooling.
-
-Install `zed` on your linux host by following
-the instructions in the
-[Zed repository Releases section](https://github.com/brimdata/zed/releases).
-You need version `v0.33` or later.
-
-Make sure you also install the latest `zed` Python module on your
-linux host:
+* Provision a linux host with a recent kernel and recent version of
+BPF enabled.
+[See below](#appendix:-macbook-setup)
+for some hints for running a recent linux using Vagrant on a MacBook.
+* Install `zed` (`v0.33` or later) on your linux host.
+Follow the instructions in the repository's
+[Github Releases](https://github.com/brimdata/zed/releases).
+* Install the latest `zed` Python module on your linux host:
 ```
 pip3 install "git+https://github.com/brimdata/zed#subdirectory=python/zed"
 ```
-
-Finally, clone our fork of the [bcc repo]() into your linux host so you can
-run Zed-emabled BCC tooling...
+* Clone the Zed-modified BCC tooling.  We forked the BCC repository
+and made the modifications on a branch therein called `zed`:
 ```
-git clone https://github.com/brimdata/bcc
+git clone https://github.com/brimdata/bcc.git
+git checkout zed
 ```
-
-## Running Experiments
-
-Run a Zed lake service on your bcc-enabled linux host:
+A Zed lake service must run during the
+course of experiments described below.
+In a terminal on your linux host, create this service as follows:
 ```
 mkdir scratch
 zed lake serve -R scratch
 ```
-On the same host, create a Zed data pool for BPF:
+In another terminal on the linux host, create a Zed data pool for the
+BPF data and test that everything is working with `zapi ls`:
 ```
 zapi create bpf
+zapi ls
 ```
+The `zapi ls` command should display the pool called `bpf`.
+
+> Note that in a production environment, the linux host would post data
+> to a Zed lake running at scale elsewhere.  For this experiment,
+> we are simply running the Zed lake directly on the linux host.
+
+Next, decide where you want to query your BPF data from (the "desktop host")
+and install zed and/or the
+[Brim app](https://github.com/brimdata/brim) there.
+The desktop host will send queries to the lake running on the linux host.
+
+### `zapi` on the desktop host
+
+By default, `zapi` connects to the lake service API at `http://localhost:9867`,
+which is also the default port used by `zed lake serve`.
+Thus, you can run `zapi` commands on the linux host without any configuration.
+
+To point `zapi` running on the desktop host at the linux lake,
+you can use the `-lake` command-line option or simply set
+the `ZED_LAKE` environment, e.g.,
+```
+export ZED_LAKE=http://linux-host
+```
+If no port is supplied in the lake URL, then 9867 is assumed.
+
+For the Vagrant setup described
+[described below](#appendix:-macbook-setup), the desktop port 8098 is
+forwarded to the linux port 9876, so you should use this for ZED_LAKE:
+```
+export ZED_LAKE=http://localhost:8098
+```
+
+### Brim on the desktop host
+
+The Brim app is a desktop application based on Electron, similar to the Slack
+desktop model.  Brim is a nice way to look at Zed data.
+
+To open a lake inside Brim, click on the current lake name in the upper left
+of Brim's window.  This will bring up a drop-down menu and you should click on
+the "Add Lake..." option at the bottom of the menu.  A form will appear and
+you can enter a name (e.g., "Linux BPF Lake") and an URL for the lake.  The URL
+should be one of the two options [described above](#zapi-on-the-desktop-host):
+* `http://linux-host`, or
+* `http://localhost:8098`.
+
+## Running Experiments
 
 Then `cd` into the forked bcc repo and
 run any experiments you'd like with this tooling and various options,
@@ -91,21 +118,6 @@ zapi query -Z "sum(count) by stack,name | sort sum"
 > Note that Zed lakes have branching and merging just like `git`.  We are going
 > to simplify the commitish so you can say `bpf` instead of `bpf@main` where the
 > commitish will default to the `main` branch.
-
-## The Brim App
-
-The [Brim app](https://github.com/brimdata/brim) is a nice way to look at Zed data.
-Brim is a desktop app based on Electron, similar to the Slack desktop model.
-
-For my Mac/vagrant setup, I configured a port forwarding rule in the
-Vagrantfile that came with the `bpftracing` repo by adding the
-"forwarded_port" rule below:
-```
-Vagrant.configure("2") do |config|
-  ...
-  config.vm.network "forwarded_port", guest: 9867, host: 8098
-```
-Then, in the Brim app, I added a lake connection to `localhost:8098`.
 
 ## Examples
 
@@ -393,3 +405,55 @@ Unlike search systems, all the queries work whether indexed or not
 and indexes simply speed things up.  And if you change indexing rules,
 you don't need to reindex everything.  Just the stuff you want
 the new rules to apply to.
+
+## Appendix: MacBook Setup
+
+I set up tooling on my Mac with VirtualBox but a similar pattern should work on
+other systems or native linux instances.
+
+I adjusted a few things from [the instructions here](https://codeboten.medium.com/bpf-experiments-on-macos-9ad0cf21ea83),
+mainly to use a newer version of Ubuntu Hirsute (21.04)
+along with the more up-to-date BPF tooling referencing in
+[BCC issue #2678](https://github.com/iovisor/bcc/issues/2678#issuecomment-883203478).
+More details on the Ubuntu PPA are
+[here](https://chabik.com/2021/09/ppas-update/).
+
+
+> With this approach, I was able to
+> [fork the BCC repo](https://github.com/brimdata/bcc),
+> run the latest BCC tooling in this newer Ubuntu, and
+> make the modifications described here.
+
+Since the latest tools in the `bcc` repo didn't run for me on this kernel,
+I just copied two tools from `/usr/sbin` to this repo:
+`stackcount-bpfcc` and `execsnoop-bpfcc`.
+I hacked each of these tools to output events as ZSON lines of text
+instead of text sent to st.
+
+Also, since the Zed Python client assumes Python3, I created a
+separate "loader" script to bundle lines of ZSON with a timeout
+and commit each bundle to a Zed server on running on `localhost`
+instead of bundling this logic in the bcc tooling.
+
+Install `zed` on your linux host by following
+the instructions in the
+[Zed repository Releases section](https://github.com/brimdata/zed/releases).
+You need version `v0.33` or later.
+
+Finally, clone our fork of the [bcc repo]() into your linux host so you can
+run Zed-emabled BCC tooling...
+```
+git clone https://github.com/brimdata/bcc
+```
+
+For the Mac/vagrant setup described below, a port forwarding rule is defined
+in [the Vagrantfile](./Vagrantfile) that forwards the host port 8098 to
+the guest port 9867, which is the default port for the Zed lake.
+
+that came with the `bpftracing` repo by adding the
+"forwarded_port" rule below:
+```
+Vagrant.configure("2") do |config|
+  ...
+  config.vm.network "forwarded_port", guest: 9867, host: 8098
+```
