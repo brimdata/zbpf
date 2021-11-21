@@ -11,21 +11,26 @@ and stream updates live into a Zed lake.
 
 > TBD: update Zed arch doc after branch is merged.
 
+XXX put service on host side to emulate the proper model of sending telemetry
+to the service.
+
 ## Setup on Mac
 
 I set up tooling on my Mac with VirtualBox but a similar pattern should work on
 other systems or native linux instances.
 
 I adjusted a few things from [the instructions here](https://codeboten.medium.com/bpf-experiments-on-macos-9ad0cf21ea83),
-mainly to use a newer version of Ubuntu Hirsute (21.04) (which should work on Windows WSL2)
+mainly to use a newer version of Ubuntu Hirsute (21.04)
 along with the more up-to-date BPF tooling referencing in
 [BCC issue #2678](https://github.com/iovisor/bcc/issues/2678#issuecomment-883203478).
 More details on the Ubuntu PPA are
 [here](https://chabik.com/2021/09/ppas-update/).
-With this approach, I was able to
-[fork the BCC repo](https://github.com/brimdata/bcc),
-run the latest BCC tooling in this newer Ubuntu, and
-make the modifications described here.
+
+
+> With this approach, I was able to
+> [fork the BCC repo](https://github.com/brimdata/bcc),
+> run the latest BCC tooling in this newer Ubuntu, and
+> make the modifications described here.
 
 Since the latest tools in the `bcc` repo didn't run for me on this kernel,
 I just copied two tools from `/usr/sbin` to this repo:
@@ -41,6 +46,19 @@ instead of bundling this logic in the bcc tooling.
 Install `zed` on your linux host by following
 the instructions in the
 [Zed repository Releases section](https://github.com/brimdata/zed/releases).
+You need version `v0.33` or later.
+
+Make sure you also install the latest `zed` Python module on your
+linux host:
+```
+pip3 install "git+https://github.com/brimdata/zed#subdirectory=python/zed"
+```
+
+Finally, clone our fork of the [bcc repo]() into your linux host so you can
+run Zed-emabled BCC tooling...
+```
+git clone https://github.com/brimdata/bcc
+```
 
 ## Running Experiments
 
@@ -54,11 +72,12 @@ On the same host, create a Zed data pool for BPF:
 zapi create bpf
 ```
 
-Then run any experiments you'd like with this tooling and various options,
+Then `cd` into the forked bcc repo and
+run any experiments you'd like with this tooling and various options,
 hitting ctrl-C to terminate, e.g.,
 ```
-sudo ./execsnoop-bpfcc | python3 loader.py
-sudo ./stackcount-bpfcc -i 1 -z ip_output | python3 loader.py
+sudo python3 ./tools/execsnoop.py -z
+XXX sudo ./stackcount-bpfcc -i 1 -z ip_output | python3 loader.py
 ```
 
 >Note the `loader.py` program has the pool "bpf" hardwired.
