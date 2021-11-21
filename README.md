@@ -20,12 +20,26 @@ or to any custom BPF application.
 
 ## Motivation
 
+at the site where data is generated you have richly typed data structures.
+Then you turns these data structures into textual logs or maybe CSV or JSON
+losing the detailed type information that was there.
+
+a colleague participating on a university research team was
+collecting custom performance measurements of databases using BPF.
+
+Schema challenges... put the CSVs into a warehouse.  But now whenever
+the experimental structure changes, the database tables need to be updated
+and old data potentially migrated to new tables.
+keep
+
+This was precisely the motivation of Zed: XXX.
+
 XXX story about CSV and BPF measurements
 
 ## Setup
 
 You will need a linux environment with BPF enabled (the "linux host")
-and a client host (the "desktop host") that you will use to query a
+and any client environment (the "desktop host").  The desktop host will query the
 Zed lake running on the linux host.  If you happen to be running
 a BPF-enabled desktop or laptop, then the linux host and desktop host
 could be the same.
@@ -68,6 +82,8 @@ zapi create bpf
 zapi ls
 ```
 The `zapi ls` command should display the pool called `bpf`.
+Note that the Zed-enhanced BCC tools are configured to write
+to the `bpf` pool.
 
 > Note that in a production environment, the linux host would post data
 > to a Zed lake running at scale elsewhere.  For this experiment,
