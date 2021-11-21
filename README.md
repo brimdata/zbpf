@@ -106,7 +106,7 @@ Zed lake running on the linux host.
 
 Provision a linux host with a recent kernel and recent version of
 BPF enabled.
-[See below](#appendix:-macbook-setup)
+[See below](#appendix-macbook-setup)
 for some hints for running a recent linux using Vagrant on a MacBook
 but any recent linux running anywhere should work.
 
