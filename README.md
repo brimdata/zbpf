@@ -7,7 +7,8 @@ into
 The idea is to arrange for BPF to emit events and aggregates
 directly in the
 [super-structured Zed format](https://github.com/brimdata/zed/blob/zed-update/docs/formats/zdm.md)
-and stream updates live into a Zed lake.
+and stream updates live into a
+[Zed lake](https://github.com/brimdata/zed/tree/main/docs/lake).
 
 > Zed's super-structured approach allows data to be completely self describing using
 > its comprehensive type system so that external schemas do not need to be
