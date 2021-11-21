@@ -1,7 +1,10 @@
 # zbpf
 
 This repo contains a very lightweight, proof-of-concept for integrating
-Zed into BPF.  The idea is to arrange for BPF to emit events and aggregates
+[Zed](https://github.com/brimdata/zed)
+into
+[BPF](https://ebpf.io/).
+The idea is to arrange for BPF to emit events and aggregates
 directly in the
 [super-structured Zed format](https://github.com/brimdata/zed/blob/zed-update/docs/formats/zdm.md)
 and stream updates live into a Zed lake.
@@ -12,7 +15,12 @@ and stream updates live into a Zed lake.
 
 > TBD: update Zed arch doc after branch is merged.
 
-The examples here are directly embedded in the Python tooling from the
+Note that we are using the term "BPF" to refer to the modern eBPF linux
+subsystem as the original BPF is now referred to as
+[classic BPF](https://www.usenix.org/conference/usenix-winter-1993-conference/bsd-packet-filter-new-architecture-user-level-packet)
+[explained by Brendan Gregg in his LISA21 talk](https://youtu.be/_5Z2AU7QTH4?t=82).
+
+The examples described here are directly embedded in the Python tooling from the
 [BPF Compiler Collection (BCC)](https://github.com/iovisor/bcc), but the
 approach would be also applicable to
 [bpftrace](https://github.com/iovisor/bpftrace)
