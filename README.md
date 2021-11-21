@@ -154,8 +154,8 @@ zed and or Brim on your desktop/laptop.
 
 Install these packages following the instructions in
 [Zed releases](https://github.com/brimdata/zed/releases)
-(as described above for the linux host)
-[Brim releases](https://github.com/brimdata/brime/releases).
+(as described above for the linux host) or
+[Brim releases](https://github.com/brimdata/brim/releases).
 
 You can also [build Zed from source](https://github.com/brimdata/zed#building-from-source).
 
