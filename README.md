@@ -674,11 +674,11 @@ zapi query -Z 'is(type(exec))'
 ```
 What are all the commands that were run?
 ```
-zapi query -Z 'union(pcomm)'
+zapi query -Z 'commands:=union(pcomm)'
 ```
 And what about their paths?  Let's take a union over record expressions:
 ```
-zapi query -Z 'union({name:pcomm,path:args[0]})'
+zapi query -Z 'commands:=union({name:pcomm,path:args[0]})'
 ```
 Pretty cool!
 
