@@ -70,7 +70,9 @@ a fixed set of hard-coded columns.
 There must be a better way.
 
 What if you could simply marshal any `ctypes` struct into a Zed record
-and efficiently serialize this record as ZNG?  Then BPF code that captured
+and efficiently serialize this record as
+[ZNG](https://github.com/brimdata/zed/blob/main/docs/formats/zng.md)?
+Then BPF code that captured
 native C events could simply marshal the data directly and send it along to a Zed lake.
 Because Zed doesn't require schema definitions nor does it organize data
 into tables, all these native C events could be intermingled and efficiently
@@ -197,10 +199,10 @@ should be one of the two options [described above](#zapi-on-the-desktop-host):
 ## Running Experiments
 
 To run an BPF/Zed capture experiment on the linux host,
-`cd` into the top-level directory fo the forked bcc repo
+`cd` into the top-level directory of the forked bcc repo
 (remember you need to be on the `zed` git branch).
 
-Then, run an experiment, specify the `-z` flag for Zed,
+Then, to run an experiment, specify the `-z` flag for Zed,
 and try either _execsnoop_:
 ```
 sudo python3 ./tools/execsnoop.py -z
@@ -209,7 +211,7 @@ Or _stackcount_:
 ```
 sudo python3 ./tools/stackcount.py -i 1 -P -z ip_output
 ```
-Here, we have chosen "ip_output" as the kernel function to trace,
+For _stackcount_, we have specified "ip_output" as the kernel function to trace,
 but you can try any BPF-traceable function.  We also specified
 `-i 1` so that data is transmitted to the Zed lake every second,
 and `-P` so we get per-process stats (in particular, the process name
