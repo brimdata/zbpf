@@ -607,7 +607,7 @@ Everything is open source.
 **TL;DR** if you want to just play around with this BPF data without setting
 up a linux environment or even a Zed lake, you can just run Brim using
 * The [bpf.zson file](bpf.zson) from our BPF experiment, and
-* [sample queries](bpf-queries.json) for Brim.
+* [sample queries](queries.json) for Brim.
 
 You can drag the sample data into the Brim app and drag the queries into
 the side panel where the query library is located.  Brim will automatically
