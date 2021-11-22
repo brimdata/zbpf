@@ -377,7 +377,7 @@ Here is a more sophisticated example.
 This query computes the unique set of stacks grouped by the parent caller
 of the traced function (in this case `ip_output`):
 ```
-zapi query -Z "stacks:=union(stack) by callee:=stack[1]"
+zapi query -Z "has(stack[1]) | stacks:=union(stack) by callee:=stack[1]"
 ```
 giving output like this
 ```
@@ -578,3 +578,109 @@ Vagrant.configure("2") do |config|
   ...
   config.vm.network "forwarded_port", guest: 9867, host: 8098
 ```
+
+# Demo notes - OpenObservability Podcast
+
+> If we have enough time,
+> this section contains a quick outline of a demo that I will run through
+> during the [OpenObservability Podcast](https://openobservability.io/)
+> at 11am on November 23, 2021.
+
+Exploit super-structured Zed data to make BPF instrumentation easier.
+
+Everything is open source.
+
+### Setup
+
+* Based on this [`zbpf` repository](https://github.com/brimdata/zbpf)
+    * can reproduce everything here
+* Modified two BCC tools to produce Zed directly
+    * _snoopexec_, _stacktrace_
+    * The [diffs](https://github.com/brimdata/bcc/commit/9a8d6b95ec7bb9490c63f4d82524a58ba0142eeb) are in a [forked repo](https://github.com/brimdata/bcc)
+* Ran experiments on my MacBook using vagrant and recent linux
+    * Zed lake runs on linux host
+    * Modified BCC tooling streams super-structured Zed data straight to lake
+    * Queries run on desktop host
+        * `zapi`
+        * Brim app
+
+**TL;DR** if you want to just play around with this BPF data without setting
+up a linux environment or even a Zed lake, you can just run Brim using
+* The [bpf.zson file](bpf.zson) from our BPF experiment, and
+* [sample queries](queries.json) for Brim.
+
+You can drag the sample data into the Brim app and drag the queries into
+the side panel where the query library is located.  Brim will automatically
+launch a local lake that zapi will connect to.  To have the `zapi` commands
+connect to the pool created from dragging `bpf.zson` into the app, issue
+the command
+```
+zed use bpf.zson@main
+```
+
+### Zed basics
+
+Zed is a superset of JSON, and much more powerful
+```
+echo '{"ts":"11/22/2021 8am", "addr":"10.0.0.1", "number":"98.6"}' | zq -Z 'this:=cast(this, type({ts:time,addr:ip,number:float64}))' -
+```
+We can output Zed in an efficient binary form.  Then get back the type information...
+```
+echo '{"ts":"11/22/2021 8am", "addr":"10.0.0.1", "number":"98.6"}' | zq -f zng 'this:=cast(this, type({ts:time,addr:ip,number:float64}))' - > binary.zng
+cat binary.zng
+hexdump binary.zng
+zq 'cut typeof(this)' binary.zng
+```
+There is much more to it, but I will refer you to the Zed docs for more info...
+
+### The BPF data
+
+Zed lake service is running on the linux guest VM.
+
+Earlier ran a simple [workload](https://github.com/brimdata/zbpf/blob/main/workload)
+while _execsnoop_ and _stackcount_ were running.
+
+We'll tell the `zapi` CLI command (for hitting Zed lake API) to use the
+"main" branch of a pool called "bpf":
+```
+zapi use bpf@main
+```
+
+It's quite a small data set but Zed lakes are designed to scale...
+```
+zapi query "count()"
+```
+
+Have a look at some pretty-printed (-Z) records...
+```
+zapi query -Z "* | head 42"
+```
+
+That's interesting... count up all the stacks containing __tcp_transmit_skb_:
+```
+zapi query '"__tcp_transmit_skb" in stack | count()'
+```
+Are they always in the grandparent caller position?
+```
+zapi query 'stack[2]=="__tcp_transmit_skb" | count()'
+```
+One isn't!  Find it and pretty print it...
+```
+zapi query -Z 'stack[2]!="__tcp_transmit_skb" and "__tcp_transmit_skb" in stack'
+```
+How about listing the events from _execsnoop_?
+```
+zapi query -Z 'is(type(exec))'
+```
+What are all the commands that were run?
+```
+zapi query -Z 'commands:=union(pcomm)'
+```
+And what about their paths?  Let's take a union over record expressions:
+```
+zapi query -Z 'commands:=union({name:pcomm,path:args[0]})'
+```
+Pretty cool!
+
+We'll cut over to the app here and run through the
+[queries in the library](queries.json)...
