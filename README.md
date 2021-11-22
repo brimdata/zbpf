@@ -273,15 +273,48 @@ zapi query "count() by name"
 ```
 and you get output like this
 ```
-{name:"swapper/0",count:7(uint64)}
-{name:"python3",count:113(uint64)}
-{name:"sshd",count:73(uint64)}
-{name:"zed",count:392(uint64)}
-{name:"kworker/u4:3",count:2(uint64)}
-{name:"ksoftirqd/1",count:21(uint64)}
+{name:"kworker/u4:3",count:4(uint64)}
+{name:"kworker/u4:1",count:1(uint64)}
+{name:"ps",count:2(uint64)}
+{name:"python3",count:29(uint64)}
+{name:"zq",count:1(uint64)}
+{name:"zed",count:79(uint64)}
 {name:"ksoftirqd/0",count:1(uint64)}
-{name:"swapper/1",count:44(uint64)}
+{name:"ls",count:10(uint64)}
+{name:"swapper/1",count:21(uint64)}
+{name:"find",count:3(uint64)}
+{name:"ksoftirqd/1",count:11(uint64)}
+{name:"sshd",count:54(uint64)}
+{name:"systemd-resolve",count:6(uint64)}
+{name:"grep",count:1(uint64)}
+{name:"curl",count:31(uint64)}
+{name:"swapper/0",count:2(uint64)}
 ```
+Or if you want a table, you can specify `-f table`:
+```
+zapi query -f table "count() by name"
+```
+to get
+```
+name            count
+python3         29
+curl            31
+zed             79
+kworker/u4:1    1
+ksoftirqd/1     11
+kworker/u4:3    4
+ls              10
+grep            1
+zq              1
+ps              2
+systemd-resolve 6
+swapper/0       2
+sshd            54
+find            3
+ksoftirqd/0     1
+swapper/1       21
+```
+
 Here is a more sophisticated query where we sum up the counts from every
 1 second sampling interval and we use the "stack" and the process "name"
 as group-by keys.  Note that the Zed query language is perfectly happy using
@@ -306,14 +339,14 @@ in the pretty-printed (`-Z`) ZSON output:
         "sock_sendmsg",
         "sock_write_iter",
         "new_sync_write",
-        "__vfs_write",
         "vfs_write",
-        "sys_write",
+        "ksys_write",
+        "__x64_sys_write",
         "do_syscall_64",
         "entry_SYSCALL_64_after_hwframe"
     ],
     name: "sshd",
-    sum: 2020
+    sum: 334
 }
 {
     stack: [
@@ -325,105 +358,22 @@ in the pretty-printed (`-Z`) ZSON output:
         "tcp_push",
         "tcp_sendmsg_locked",
         "tcp_sendmsg",
-        "inet_sendmsg",
+        "inet6_sendmsg",
         "sock_sendmsg",
         "sock_write_iter",
         "new_sync_write",
-        "__vfs_write",
         "vfs_write",
-        "sys_write",
+        "ksys_write",
+        "__x64_sys_write",
         "do_syscall_64",
         "entry_SYSCALL_64_after_hwframe"
     ],
     name: "zed",
-    sum: 1851
+    sum: 136
 }
 ```
 
-### Zed and Data Shapes
-
-Zed is a bit different and lets you put super-structured data all in one
-location.  It's kind of like rich database tables without having to define
-tables and schemas ahead of time.  While this may sound to you like a NoSQL store,
-e.g., Mongo or CouchDB, it's quite different because Zed data is super-structured
-instead of semi-structured:
-super-structured data has a well-defined type for every value whereas semi-structured
-data has implied types and the "shape" of a semi-structured data value can only be
-determined by traversing that value.
-
-The power of super-structured data types and Zed is that types are first class.
-This means you can put a type anywhere a value can go, and in particular,
-the Zed query language includes a `typeof()` operator that returns the type
-of a value as a value.  So you can say things like
-```
-zapi query -Z 'count() by typeof(this)'
-```
-to see the "shape" of all the values in a data pool, e.g., giving output
-that looks like this:
-```
-{
-    typeof: (stack=({name:string,ustack:[string],stack:[string],count:int64})),
-    count: 578 (uint64)
-}
-{
-    typeof: ({ts:time,pcomm:string,pid:int64,ppid:int64,ret:int64,args:string}),
-    count: 13 (uint64)
-}
-```
-Or you could get a sample of each shape by saying this:
-```
-zapi query -Z 'val:=any(this) by typeof(this) | cut val'
-```
-giving a result like this:
-```
-{
-    val: {
-        ts: 2021-11-08T13:17:41Z,
-        pcomm: "cp",
-        pid: 2234,
-        ppid: 1973,
-        ret: 0,
-        args: "/bin/cp /usr/sbin/opensnoop-bpfcc ."
-    }
-}
-{
-    val: {
-        name: "python3",
-        ustack: [
-            "_PyEval_EvalFrameDefault",
-            "[unknown]",
-            "[unknown]",
-            "[unknown]",
-            "[unknown]",
-            "[unknown]",
-            "[unknown]",
-            "[unknown]",
-            "[unknown]",
-            "[unknown]",
-            "[unknown]",
-            "[unknown]",
-            "[unknown]",
-            "[unknown]",
-            "[unknown]"
-        ],
-        stack: [
-            "ip_output",
-            "ip_queue_xmit",
-            "__tcp_transmit_skb",
-            "tcp_write_xmit",
-            "tcp_tsq_handler.part.42",
-            "tcp_tasklet_func",
-            "tasklet_action",
-            "__do_softirq",
-            "irq_exit",
-            "do_IRQ",
-            "ret_from_intr"
-        ],
-        count: 1
-    } (=stack)
-}
-```
-
+Here is a more sophisticated example.
 This query computes the unique set of stacks grouped by the parent caller
 of the traced function (in this case `ip_output`):
 ```
@@ -508,6 +458,82 @@ giving output like this
     ]|
 }
 ...
+```
+
+
+### Zed and Data Shapes
+
+Zed is a bit different and lets you put super-structured data all in one
+location.  It's kind of like rich database tables without having to define
+tables and schemas ahead of time.  While this may sound to you like a NoSQL store,
+e.g., Mongo or CouchDB, it's quite different because Zed data is super-structured
+instead of semi-structured:
+super-structured data has a well-defined type for every value whereas semi-structured
+data has implied types and the "shape" of a semi-structured data value can only be
+determined by traversing that value.
+
+The power of super-structured data types and Zed is that types are first class.
+This means you can put a type anywhere a value can go, and in particular,
+the Zed query language includes a `typeof()` operator that returns the type
+of a value as a value.  So you can say things like
+```
+zapi query -Z 'count() by typeof(this)'
+```
+to see the "shape" of all the values in a data pool, e.g., giving output
+that looks like this:
+```
+{
+    typeof: (stack=({ts:time,name:string,ustack:[string],stack:[string],count:int64})),
+    count: 256 (uint64)
+}
+{
+    typeof: (exec=({ts:time,pcomm:string,pid:int64,ppid:int64,ret:int64,args:[string]})),
+    count: 30 (uint64)
+}
+```
+Or you could get a sample of each shape by saying this:
+```
+zapi query -Z 'val:=any(this) by typeof(this) | cut val'
+```
+giving a result like this:
+```
+{
+    val: {
+        ts: 2021-11-22T14:45:09Z,
+        name: "ksoftirqd/1",
+        ustack: [] ([string]),
+        stack: [
+            "ip_output",
+            "ip_queue_xmit",
+            "__tcp_transmit_skb",
+            "tcp_write_xmit",
+            "tcp_tsq_write.part.0",
+            "tcp_tsq_handler",
+            "tcp_tasklet_func",
+            "tasklet_action_common.constprop.0",
+            "tasklet_action",
+            "__softirqentry_text_start",
+            "run_ksoftirqd",
+            "smpboot_thread_fn",
+            "kthread",
+            "ret_from_fork"
+        ],
+        count: 1
+    } (=stack)
+}
+{
+    val: {
+        ts: 2021-11-22T14:45:08Z,
+        pcomm: "find",
+        pid: 204580,
+        ppid: 204536,
+        ret: 0,
+        args: [
+            "/usr/bin/find",
+            "../bcc"
+        ]
+    } (=exec)
+}
 ```
 
 ## Zed for Telemetry
