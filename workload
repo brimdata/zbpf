@@ -1,0 +1,24 @@
+#!/bin/bash
+ls -Afl /
+ls .
+curl www.google.com > /dev/null
+sleep 1
+find ../bcc | grep lua | awk "{print length($1)}"
+ps
+clang
+sleep 1
+ps auxww | grep zed | awk "{print $1}"
+curl www.redfin.com > /dev/null
+echo '{a:1}' | zq 'a:=a+1' -
+sleep 0.5
+ls | grep foo
+ls
+sleep 0.5
+curl www.google.com > /dev/null
+curl www.redfin.com > /dev/null
+curl www.sfgate.com > /dev/null
+sleep 2
+ls
+ps
+find ../bcc > /dev/null
+
