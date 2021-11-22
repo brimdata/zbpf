@@ -526,7 +526,7 @@ the new rules to apply to.
 ## Appendix: MacBook Setup
 
 I ran the experiments above using a linux host configured on VirtualBox
-using vagrant running on on a MacBook.
+using vagrant running on a MacBook.
 
 I adjusted a few things from [the instructions here](https://codeboten.medium.com/bpf-experiments-on-macos-9ad0cf21ea83),
 mainly to use a newer version of Ubuntu Hirsute (21.04)
@@ -541,7 +541,7 @@ sudo add-apt update
 sudo add-apt install bpfcc
 ```
 
-Also, I added a port forwarding rule in the (Vagrantfile)[./Vagrantfile]:
+Also, I added a port forwarding rule in the [Vagrantfile](./Vagrantfile):
 ```
 Vagrant.configure("2") do |config|
   ...
