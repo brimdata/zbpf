@@ -620,13 +620,17 @@ zed use bpf.zson@main
 
 ### Zed basics
 
-Zed is a superset of JSON, and much more powerful
+ZSON is a superset of JSON, and much more powerful
 ```
-echo '{"ts":"11/22/2021 8am", "addr":"10.0.0.1", "number":"98.6"}' | zq -Z 'this:=cast(this, type({ts:time,addr:ip,number:float64}))' -
+echo '{"ts":"11/22/2021 8:01am", "addr":"10.0.0.1", "number":"98.6"}' | zq -Z 'this:=cast(this, type({ts:time,addr:ip,number:float64}))' -
+```
+We can get the JSON back if you'd like (with a standard time)...
+```
+echo '{"ts":"11/22/2021 8:01am", "addr":"10.0.0.1", "number":"98.6"}' | zq -Z 'this:=cast(this, type({ts:time,addr:ip,number:float64}))' - | zq -f json - | jq
 ```
 We can output Zed in an efficient binary form.  Then get back the type information...
 ```
-echo '{"ts":"11/22/2021 8am", "addr":"10.0.0.1", "number":"98.6"}' | zq -f zng 'this:=cast(this, type({ts:time,addr:ip,number:float64}))' - > binary.zng
+echo '{"ts":"11/22/2021 8:01am", "addr":"10.0.0.1", "number":"98.6"}' | zq -f zng 'this:=cast(this, type({ts:time,addr:ip,number:float64}))' - > binary.zng
 cat binary.zng
 hexdump binary.zng
 zq 'cut typeof(this)' binary.zng
