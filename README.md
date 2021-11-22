@@ -125,6 +125,7 @@ Clone the Zed-modified BCC tooling.  We forked the BCC repository
 and made the modifications on a branch therein called `zed`:
 ```
 git clone https://github.com/brimdata/bcc.git
+cd bcc
 git checkout zed
 ```
 
@@ -235,6 +236,10 @@ to get the records that came from each different command:
 zapi query -use bpf@main -Z "is(type(exec))"
 zapi query -use bpf@main -Z "is(type(stack))"
 ```
+
+For the examples below, we started both _execsnoop_ and _stackcount_
+on the linux host, then and the bash script [`workload`](./workload)
+to generate synthetic activity.
 
 ## Examples
 
