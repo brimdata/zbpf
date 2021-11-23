@@ -586,6 +586,8 @@ Vagrant.configure("2") do |config|
 > during the [OpenObservability Podcast](https://openobservability.io/)
 > at 11am on November 23, 2021.
 
+[Motivated by colleague at CMU.](#motivation)
+
 Exploit super-structured Zed data to make BPF instrumentation easier.
 
 Everything is open source.
