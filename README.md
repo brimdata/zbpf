@@ -170,12 +170,11 @@ Thus, you can run `zapi` commands on the linux host without any configuration.
 
 On the desktop host, to point `zapi` at the lake running on linux host,
 you can use the `-lake` command-line option or simply set
-the `ZED_LAKE` environment, e.g.,
+the `ZED_LAKE` environment variable, e.g.,
 ```
-export ZED_LAKE=http://linux-host
+export ZED_LAKE=http://linux-host:9867
 ```
 where _linux-host_ is the IP or DNS name of the linux host.
-If no port is supplied in the lake URL, then 9867 is assumed.
 
 For the Vagrant setup described
 [described below](#appendix-macbook-setup), the desktop port 8098 is
@@ -194,7 +193,7 @@ of Brim's window.  This will bring up a drop-down menu and you should click on
 the "Add Lake..." option at the bottom of the menu.  A form will appear and
 you can enter a name (e.g., "Linux BPF Lake") and an URL for the lake.  The URL
 should be one of the two options [described above](#zapi-on-the-desktop-host):
-* `http://linux-host`, or
+* `http://linux-host:9867`, or
 * `http://localhost:8098`.
 
 ## Running Experiments
