@@ -28,7 +28,7 @@ or to any custom BPF application.
 
 ## Motivation
 
-Dealing with data is hard.  To keep things simple, people ofteh simplify
+Dealing with data is hard.  To keep things simple, people often simplify
 their rich data with "go to" and ubiquitous formats like CSV and JSON.
 While simple in appearance,
 these formats can be
