@@ -28,7 +28,7 @@ or to any custom BPF application.
 
 ## Motivation
 
-Dealing with data is hard.  To keep things simple, people ofteh simplify
+Dealing with data is hard.  To keep things simple, people often simplify
 their rich data with "go to" and ubiquitous formats like CSV and JSON.
 While simple in appearance,
 these formats can be
@@ -46,7 +46,7 @@ to many different and changing column layouts, and
 updating tables in the SQL database to track changes in their
 collection methodology.  It was a nightmare.
 
-Then our friend remembered Zed and asked "isn't this where Zed is supposed to help?"
+Then our friend remembered Zed and asked, "Isn't this where Zed is supposed to help?"
 Yes, of course!
 
 The obvious approach here would be to simply load all the CSV files into a Zed lake
@@ -61,7 +61,7 @@ away when serializing into formats like CSV or JSON.  Indeed in BPF, the BCC too
 has direct access to in-kernel C data structures with all of their type information
 and potentially hierarchical structure.  The BCC Python code, for instance,
 accesses native BPF events via the
-[ctypes](https://docs.python.org/3/library/ctypes.html) library.
+[`ctypes`](https://docs.python.org/3/library/ctypes.html) library.
 
 Yet our colleague's BCC tooling simply threw away this detailed type information
 and instead wrote its output as CSV records in
@@ -84,7 +84,7 @@ So, it's sort of like having tables without ever having to create them.
 
 To explore this idea of efficient serialization of BPF events as ZNG,
 we first developed the simple proof-of-concept here.  We don't have a
-ctypes marshaler working yet nor do we have Zed output serialiead as ZNG.
+`ctypes` marshaler working yet nor do we have Zed output serialiead as ZNG.
 Rather we instrumented a couple of BCC tools (namely, `execsnoop` and `stackcount`)
 with flags to generate the human-readable ZSON format and load this data
 directly into a Zed lake.
@@ -94,7 +94,7 @@ directly into a Zed lake.
 
 ## Setup
 
-To explore this proof-of-concept,
+To explore this proof of concept,
 you will need a Linux environment with BPF enabled (the "Linux host")
 and a client environment (the "desktop host") to query the BPF data.
 The desktop host will query a
@@ -102,7 +102,7 @@ Zed lake running on the Linux host.
 
 > If you happen to be running
 > a BPF-enabled desktop or laptop, then the Linux host and desktop host
-> could be one in the same.
+> could be one and the same.
 
 ### The Linux host
 
@@ -112,11 +112,11 @@ BPF enabled.
 for some hints for running a recent Linux using Vagrant on a MacBook
 but any recent Linux running anywhere should work.
 
-Install `zed` (`v0.33` or later) on your Linux host.
+Install Zed (`v0.33` or later) on your Linux host.
 Follow the instructions in the repository's
-[Github Releases](https://github.com/brimdata/zed/releases).
+[GitHub Releases](https://github.com/brimdata/zed/releases).
 
-Install the latest `zed` Python module on your Linux host:
+Install the latest Zed Python module on your Linux host:
 ```
 pip3 install "git+https://github.com/brimdata/zed#subdirectory=python/zed"
 ```
@@ -153,7 +153,7 @@ to the `bpf` pool.
 ### The desktop host
 
 To query the Zed lake running on the Linux host, you should install
-zed and or Brim on your desktop/laptop.
+Zed and or Brim on your desktop/laptop.
 
 Install these packages following the instructions in
 [Zed releases](https://github.com/brimdata/zed/releases)
@@ -170,16 +170,15 @@ Thus, you can run `zapi` commands on the Linux host without any configuration.
 
 On the desktop host, to point `zapi` at the lake running on Linux host,
 you can use the `-lake` command-line option or simply set
-the `ZED_LAKE` environment, e.g.,
+the `ZED_LAKE` environment variable, e.g.,
 ```
-export ZED_LAKE=http://linux-host
+export ZED_LAKE=http://linux-host:9867
 ```
 where _linux-host_ is the IP or DNS name of the Linux host.
-If no port is supplied in the lake URL, then 9867 is assumed.
 
 For the Vagrant setup described
 [described below](#appendix-macbook-setup), the desktop port 8098 is
-forwarded to the Linux port 9876, so you should use this for ZED_LAKE:
+forwarded to the Linux port 9876, so you should use this for `ZED_LAKE`:
 ```
 export ZED_LAKE=http://localhost:8098
 ```
@@ -192,15 +191,15 @@ desktop model.  Brim is a nice way to look at Zed data.
 To open a lake inside Brim, click on the current lake name in the upper left
 of Brim's window.  This will bring up a drop-down menu and you should click on
 the "Add Lake..." option at the bottom of the menu.  A form will appear and
-you can enter a name (e.g., "Linux BPF Lake") and an URL for the lake.  The URL
+you can enter a name (e.g., "Linux BPF Lake") and a URL for the lake.  The URL
 should be one of the two options [described above](#zapi-on-the-desktop-host):
-* `http://linux-host`, or
+* `http://linux-host:9867`, or
 * `http://localhost:8098`.
 
 ## Running Experiments
 
-To run an BPF/Zed capture experiment on the Linux host,
-`cd` into the top-level directory of the forked bcc repo
+To run a BPF/Zed capture experiment on the Linux host,
+`cd` into the top-level directory of the forked BCC repo
 (remember you need to be on the `zed` git branch).
 
 Then, to run an experiment, specify the `-z` flag for Zed,
@@ -247,7 +246,7 @@ With your BPF trace data in a Zed lake, searching and analyzing your data
 is a piece of cake.  You can also slice and dice the data in the lake
 and export it in most any format you'd like (JSON, Parquet, CSV, or any Zed format).
 
-First, make sure zapi query uses the "bpf" pool for your queries, as above,
+First, make sure `zapi` query uses the `bpf` pool for your queries, as above,
 by running
 ```
 zapi use bpf@main
@@ -267,11 +266,11 @@ zapi query -f json '"__tcp_transmit_skb" in stack | count()'
 {"count":650}
 ```
 Here's another cool one.  This counts up stuff by the `name` field where
-the name could be in either a stack record or a process record...
+the name could be in either a stack record or a process record:
 ```
 zapi query "count() by name"
 ```
-and you get output like this
+And you get output like this:
 ```
 {name:"kworker/u4:3",count:4(uint64)}
 {name:"kworker/u4:1",count:1(uint64)}
@@ -472,7 +471,7 @@ super-structured data has a well-defined type for every value whereas semi-struc
 data has implied types and the "shape" of a semi-structured data value can only be
 determined by traversing that value.
 
-The power of super-structured data types and Zed is that types are first class.
+The power of super-structured data and Zed is that types are first class.
 This means you can put a type anywhere a value can go, and in particular,
 the Zed query language includes a `typeof()` operator that returns the type
 of a value as a value.  So you can say things like
@@ -561,7 +560,7 @@ using vagrant running on a MacBook.
 
 I adjusted a few things from [the instructions here](https://codeboten.medium.com/bpf-experiments-on-macos-9ad0cf21ea83),
 mainly to use a newer version of Ubuntu Hirsute (21.04)
-along with the more up-to-date BPF tooling referencing in
+along with the more up-to-date BPF tooling referenced in
 [BCC issue #2678](https://github.com/iovisor/bcc/issues/2678#issuecomment-883203478).
 
 I used the [PPA here](https://chabik.com/2021/09/ppas-update/),
@@ -613,7 +612,7 @@ up a Linux environment or even a Zed lake, you can just run Brim using
 
 You can drag the sample data into the Brim app and drag the queries into
 the side panel where the query library is located.  Brim will automatically
-launch a local lake that zapi will connect to.  To have the `zapi` commands
+launch a local lake that `zapi` will connect to.  To have the `zapi` commands
 connect to the pool created from dragging `bpf.zson` into the app, issue
 the command
 ```
